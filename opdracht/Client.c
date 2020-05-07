@@ -12,13 +12,13 @@ int main( int argc, char * argv[] )
 	void *subscriber = zmq_socket (context, ZMQ_SUB);
 
 	//connect
-	int rd = zmq_connect(publisher, "tcp://benternet.pxl-ea-ict.be:24041");
-	int rc = zmq_connect( subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
+	int rp = zmq_connect(publisher, "tcp://benternet.pxl-ea-ict.be:24041");
+	int rs = zmq_connect( subscriber, "tcp://benternet.pxl-ea-ict.be:24042" );
 
 	sleep (1);
 
 	//check if connect failed
-	if (rd != 0 && rc != 0)
+	if (rp != 0 && rs != 0)
     {
         printf("ERROR: ZeroMQ error occurred during zmq_ctx_new(): %s\n", zmq_strerror(errno));
 
@@ -32,12 +32,14 @@ int main( int argc, char * argv[] )
 	const char *filterJoin = (argc > 1)? argv [1]: "BlackJack>join!>";
 	const char *filterGame = (argc > 1)? argv [1]: "BlackJack>game!>";
 
-    //making char for text
+    //making chars
 	char buf [256];
 	char name[50];
 	char textJoin[60];
+	char textplay[60];
 	char filterPlayer[50];
-	char action;
+	char action[30];
+	char play;
 	//asking player for name
 	printf("Enter your name: ");
 	scanf("%s", name);
@@ -51,55 +53,57 @@ int main( int argc, char * argv[] )
 	strcpy(filterPlayer, "BlackJack>game!>");
 	strcat(filterPlayer, name);
 	strcat(filterPlayer, ">");
-	printf("Filterplayer: %s\n", filterPlayer);
 
 	//setup receive message
 	zmq_msg_t message;
-	rc = zmq_msg_init (&message);
-
+	rs = zmq_msg_init (&message);
 
 	do{
 		//sending join with name to server
-		rd = zmq_send(publisher, textJoin, strlen(textJoin), 0); printf("message send\n");
-		assert (rd == strlen(textJoin));
+		rp = zmq_send(publisher, textJoin, strlen(textJoin), 0);
+		assert (rp == strlen(textJoin));
 	
 		//waiting until server has enough players
 		printf("Wating for players\n");
-		rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterJoin, strlen (filterJoin));
-		rc = zmq_recv (subscriber, buf, 256, 0);
+		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterJoin, strlen (filterJoin));
+		rs = zmq_recv (subscriber, buf, 256, 0);
     	printf("Message received: %s\n\n",buf);
     	memset(buf,0,256);
 
 		//receive first message with cards
-		rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
-		rc = zmq_recv (subscriber, buf, 256, 0);
+		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
+		rs = zmq_recv (subscriber, buf, 256, 0);
     	printf("Message received: %s\n\n",buf);
     	memset(buf,0,256);
 
-    
-    	//do 	//receiving player instructions
-    	//{
-   			rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
-			rc = zmq_recv (subscriber, buf, 256, 0);
-   			printf("action received: %s\n\n",buf);
+    	do 	//receiving player instructions
+    	{
+   			rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
+			rs = zmq_recv (subscriber, buf, 256, 0);
+   			printf("action received: %s\n",buf);
    			memset(buf,0,256);
-
    			//entering action and sending
    			printf("enter your action: ");
-			action = getchar();
-		//}while(action != 's');
+			scanf("%s", action);
+			//parsing text to send
+			strcpy(textplay, berichtGame);
+			strcat(textplay, name); strcat(textplay, ">");
+			strcat(textplay, action); strcat(textplay, ">");
+			rp = zmq_send(publisher, textplay, strlen(textplay), 0);
+			assert (rp == strlen(textplay));
+		}while(action[0] == 'h');
 
 		//waiting for winner anouncement
-		printf("Waiting for winner anouncement...");
-		rc = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
-		rc = zmq_recv (subscriber, buf, 256, 0);
+		printf("Waiting for winner anouncement...\n");
+		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
+		rs = zmq_recv (subscriber, buf, 256, 0);
     	printf("Message received: %s\n\n",buf);
     	memset(buf,0,256);
 
     	//play again
-    	printf("Do you want to play again?:");
-    	action = getchar();
-	}while(action == 'y');
+    	printf("Do you want to play again?(y/n):");
+    	play = getchar();
+	}while(play == 'y');
 	//free (string);
 	zmq_msg_close (&message);
 	zmq_close(publisher);
