@@ -28,9 +28,11 @@ int main( int argc, char * argv[] )
 	//bericht
 	const char *berichtJoin = (argc > 1)? argv [1]: "BlackJack>join?>";
 	const char *berichtGame = (argc > 1)? argv [1]: "BlackJack>game?>";
+	const char *berichtWinner = (argc > 1)? argv [1]: "BlackJack>winner?>";
 	//filter instellen
 	const char *filterJoin = (argc > 1)? argv [1]: "BlackJack>join!>";
 	const char *filterGame = (argc > 1)? argv [1]: "BlackJack>game!>";
+	const char *filterWinner = (argc > 1)? argv [1]: "BlackJack>winner!>";
 
     //making chars
 	char buf [256];
@@ -42,7 +44,7 @@ int main( int argc, char * argv[] )
 	char play;
 	//asking player for name
 	printf("Enter your name: ");
-	scanf("%s", name);
+	scanf(" %s", name);
 
 	//parsing text to send
 	strcpy(textJoin, berichtJoin);
@@ -75,16 +77,17 @@ int main( int argc, char * argv[] )
 		rs = zmq_recv (subscriber, buf, 256, 0);
     	printf("Message received: %s\n\n",buf);
     	memset(buf,0,256);
+    	rs = zmq_setsockopt (subscriber, ZMQ_UNSUBSCRIBE, filterGame, strlen (filterGame));
 
     	do 	//receiving player instructions
     	{
-   			rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
+   			rs = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
 			rs = zmq_recv (subscriber, buf, 256, 0);
    			printf("action received: %s\n",buf);
    			memset(buf,0,256);
    			//entering action and sending
    			printf("enter your action: ");
-			scanf("%s", action);
+			scanf(" %s", action);
 			//parsing text to send
 			strcpy(textplay, berichtGame);
 			strcat(textplay, name); strcat(textplay, ">");
@@ -95,13 +98,14 @@ int main( int argc, char * argv[] )
 
 		//waiting for winner anouncement
 		printf("Waiting for winner anouncement...\n");
-		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
+		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterWinner, strlen (filterWinner));
 		rs = zmq_recv (subscriber, buf, 256, 0);
     	printf("Message received: %s\n\n",buf);
     	memset(buf,0,256);
 
     	//play again
     	printf("Do you want to play again?(y/n):");
+    	if(play == '\n'){ play = getchar(); }
     	play = getchar();
 	}while(play == 'y');
 	//free (string);
