@@ -79,21 +79,28 @@ int main( int argc, char * argv[] )
     	memset(buf,0,256);
     	rs = zmq_setsockopt (subscriber, ZMQ_UNSUBSCRIBE, filterGame, strlen (filterGame));
 
+		rs = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
+		rs = zmq_recv (subscriber, buf, 256, 0);
+   		printf("action received: %s\n",buf);
+
     	do 	//receiving player instructions
     	{
-   			rs = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
-			rs = zmq_recv (subscriber, buf, 256, 0);
-   			printf("action received: %s\n",buf);
-   			memset(buf,0,256);
-   			//entering action and sending
+			//entering action and sending
    			printf("enter your action: ");
 			scanf(" %s", action);
+
 			//parsing text to send
 			strcpy(textplay, berichtGame);
 			strcat(textplay, name); strcat(textplay, ">");
 			strcat(textplay, action); strcat(textplay, ">");
 			rp = zmq_send(publisher, textplay, strlen(textplay), 0);
 			assert (rp == strlen(textplay));
+
+   			//receiving instructions
+			rs = zmq_recv (subscriber, buf, 256, 0);
+   			printf("action received: %s\n",buf);
+   			memset(buf,0,256);
+   			
 		}while(action[0] == 'h');
 
 		//waiting for winner anouncement
@@ -105,7 +112,7 @@ int main( int argc, char * argv[] )
 
     	//play again
     	printf("Do you want to play again?(y/n):");
-    	if(play == '\n'){ play = getchar(); }
+    	play = getchar();
     	play = getchar();
 	}while(play == 'y');
 	//free (string);
