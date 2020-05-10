@@ -1,52 +1,143 @@
-#BLACKJACK SERVER
-
+######################
+###BLACKJACK SERVER###
+######################
 #imports
+import time
 import random
+import zmq
 
-#wait for players to join
+#setup filter and topic
+JoinFilter = "BlackJack>join?>".encode('ascii')
+JoinTopic = "BlackJack>join!>"
+GameFilter = "BlackJack>game?>".encode('ascii')
+GameTopic = "BlackJack>game!>"
+WinnerFilter = "BlackJack>winner?>".encode('ascii')
+WinnerTopic = "BlackJack>winner!>"
 
-#Player cards
-Player1_cards = []
-Player2_cards = []
+#setup network
+context = zmq.Context()
+publisher = context.socket(zmq.PUSH)
+subscriber = context.socket(zmq.SUB)
 
-#server deals cards
-while len(Player1_cards) != 2:
-    Player1_cards.append(random.randint(1,11))
-    if len(Player1_cards) == 2:
-        print("Player 1 has: ", Player1_cards)
+publisher.connect("tcp://benternet.pxl-ea-ict.be:24041")
+subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042")
+subscriber.setsockopt(zmq.SUBSCRIBE, JoinFilter)
+
+while(1):
     
-while len(Player2_cards) != 2:
-    Player2_cards.append(random.randint(1,11))
-    if len(Player2_cards) == 2:
-        print("Player 2 has: ", Player2_cards)
-        
-#Player1 turn
-print("Player1 turn")
-while sum(Player1_cards) < 21:
-    if sum(Player1_cards) == 21:
-        printf("Player1 has won")
-    Player1_action = str(input("do you want to stay or hit? "))
-    if Player1_action == "hit":
+    #store Playernames
+    PlayerNames = []
+    
+    #waiting for players to join
+    for x in range(2):
+        print("waiting for players, ("+ str(x)+"/2)")
+        message = subscriber.recv()
+        PlayerNames.append(message.decode('utf8').split('>')[2])
+    
+    #send starting message
+    time.sleep(1)
+    message = JoinTopic + "Players joined, game can begin" + ">"
+    publisher.send_string(message)
+    print(message)
+    print("Player1: "+ str(PlayerNames[0])+" and Player2: "+ str(PlayerNames[1]))
+    
+    #set filter to game filter
+    subscriber.setsockopt(zmq.SUBSCRIBE, GameFilter)
+    
+    #Player cards
+    Player1_cards = []
+    Player2_cards = []
+
+    #server deals cards
+    while len(Player1_cards) != 2:
         Player1_cards.append(random.randint(1,11))
-        print("You now have "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
-    else:
-        print("You ended your turn with: "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
-        break
-if sum(Player1_cards) > 21:
-    print("Player 1 busted")
-#Player2 turn
-print("Player2 turn")
-while sum(Player2_cards) < 21:
-    if sum(Player2_cards) == 21:
-        printf("Player1 has won")
-    Player_action = str(input("do you want to stay or hit? "))
-    if Player_action == "hit":
+        if len(Player1_cards) == 2:
+            print("Player 1 has: ", Player1_cards)
+    while len(Player2_cards) != 2:
         Player2_cards.append(random.randint(1,11))
-        print("You now have "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
-    else:
-        print("You ended your turn with: "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
-        break
-if sum(Player2_cards) > 21:
-    print("Player 2 busted")
+        if len(Player2_cards) == 2:
+            print("Player 2 has: ", Player2_cards)
+        
+    #send cards to both players
+    time.sleep(1)
+    message = GameTopic + PlayerNames[0] + "'s cards: "+str(Player1_cards) + " and " +PlayerNames[1]+ "'s cards: "+str(Player2_cards) + '>'
+    print(message)
+    publisher.send_string(message)
+
+    #Player1 turn
+    print("Player1 turn")
+    while sum(Player1_cards) <= 21:
+        if sum(Player1_cards) == 21:
+            print("!!!Player1 has blackjack!!!")
+            message = GameTopic + PlayerNames[0] + '>' + "!!!BLACKJACK!!!"+ '>'
+            break
+        time.sleep(1)   
+        message = GameTopic + PlayerNames[0] + '>' + "You now have "+str(Player1_cards)+" stay or hit?" + '>'
+        publisher.send_string(message)
+        message = subscriber.recv()
+        Player1_action = message.decode('utf8').split('>')[3]
+        
+        print(Player1_action)
+        if Player1_action == "hit":
+            Player1_cards.append(random.randint(1,11))
+            print("You now have "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
+        elif Player1_action == "stay":
+            print("You ended your turn with: "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
+            message = GameTopic + PlayerNames[0] + '>' + "You ended with: "+str(Player1_cards)+ '>'
+            break
+    if sum(Player1_cards) > 21:
+        message = GameTopic + PlayerNames[0] + '>' + "BUSTED"+ '>'
+    publisher.send_string(message)
     
-#check winner
+    #Player2 turn
+    print("Player2 turn")
+    while sum(Player2_cards) <= 21:
+        if sum(Player2_cards) == 21:
+            message = GameTopic + PlayerNames[1] + '>' + "!!!BLACKJACK!!!"+ '>'
+            print("!!!Player2 has blackjack!!!")
+            break
+        time.sleep(1)   
+        message = GameTopic + PlayerNames[1] + '>' + "You now have "+ str(Player2_cards)+" stay or hit?" + '>'
+        publisher.send_string(message)
+        message = subscriber.recv()
+        Player2_action = message.decode('utf8').split('>')[3]
+        
+        if Player2_action == "hit":
+            Player2_cards.append(random.randint(1,11))
+            print("You now have "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
+        else:
+            print("You ended your turn with: "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
+            message = GameTopic + PlayerNames[1] + '>' + "You ended with: "+str(Player2_cards)+ '>'
+            break
+    if sum(Player2_cards) > 21:
+        message = GameTopic + PlayerNames[1] + '>' + "BUSTED"+ '>'
+    publisher.send_string(message)
+    
+    #check winner
+    time.sleep(2)
+    if sum(Player1_cards) == sum(Player2_cards):    #both players got same
+        print("no winner")
+        message = WinnerTopic + "Both players got: "+ str(sum(Player1_cards)) +" so it's a tie..."+ '>'
+        
+    elif sum(Player1_cards) < 21 and sum(Player1_cards) > sum(Player2_cards):     #player 1 won
+        print("Player 1 won with: "+ str(sum(Player1_cards)) +" vs "+ str(sum(Player2_cards)) )
+        message = WinnerTopic + PlayerNames[0]+" Won with: "+str(sum(Player1_cards))+'>'
+        
+    elif sum(Player2_cards) < 21 and sum(Player1_cards) < sum(Player2_cards):     #player 2 won
+        print("Player 2 won with: "+ str(sum(Player2_cards)) +" vs "+ str(sum(Player1_cards)) )
+        message = WinnerTopic + PlayerNames[1]+" Won with: "+str(sum(Player2_cards))+'>'
+        
+    elif sum(Player1_cards) == 21:
+        print("Player1 has BLACKJACK!!!")
+        message = WinnerTopic + PlayerNames[0]+" Won with a !!!BLACKJACK!!!"+'>'
+        
+    elif sum(Player2_cards) == 21:
+        print("Player2 has BLACKJACK!!!")
+        message = WinnerTopic + PlayerNames[1]+" Won with a !!!BLACKJACK!!!"+'>'
+        
+    else:
+        print("both players busted/couldnt find winner")
+        message = WinnerTopic + "Both players busted"+'>'
+        
+    #sending winner message
+    publisher.send_string(message)
