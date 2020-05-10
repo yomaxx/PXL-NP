@@ -14,6 +14,8 @@ Tern slotte als beide spelers gestopt zijn wordt de winnaar bekend gemaakt en ku
 De game werkt met 2 soorten commando's, namelijk join en game. deze worden als volgt verstuurd:
   - BlackJack>join?>bericht> & BlackJack>join!>bericht>
   - BlackJack>game?>bericht> & BlackJack>game!>bericht>
+  - BlackJack>winner!>bericht>
+  
 Berichten naar de server worden altijd met een ? verstuurd en de servere antwoord op !, zo kan je makkelijk zien wie wat verstuurd.
 Als het om algemene berichten gaat komt het bericht achter de game of join, maar als het bericht voor een speler is komt zijn naam eerst.
 Dit kan dus tot de volgende commando's lijden:
