@@ -36,6 +36,7 @@ int main( int argc, char * argv[] )
 
     //making chars
 	char buf [256];
+	char *token, *server = buf;
 	char name[50];
 	char textJoin[60];
 	char textplay[60];
@@ -98,11 +99,16 @@ int main( int argc, char * argv[] )
 
    			//receiving instructions
 			rs = zmq_recv (subscriber, buf, 256, 0);
-   			printf("action received: %s\n",buf);
-   			memset(buf,0,256);
-   			
-		}while(action[0] == 'h');
+			for (int i = 0; i < 4; ++i)
+    		{
+    			token = strtok_r(server, ">", &server);
+    		}
 
+   			printf("action received: %s\n",token);
+   			
+		}while(action[0] == 'h' && buf[0] != '!');
+
+   		memset(buf,0,256);		
 		//waiting for winner anouncement
 		printf("Waiting for winner anouncement...\n");
 		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterWinner, strlen (filterWinner));
