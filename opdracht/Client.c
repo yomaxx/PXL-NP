@@ -36,13 +36,14 @@ int main( int argc, char * argv[] )
 
     //making chars
 	char buf [256];
-	char *token, *server = buf;
+	char *test1, *test2;
 	char name[50];
 	char textJoin[60];
 	char textplay[60];
 	char filterPlayer[50];
 	char action[30];
 	char play;
+	
 	//asking player for name
 	printf("Enter your name: ");
 	scanf(" %s", name);
@@ -98,16 +99,23 @@ int main( int argc, char * argv[] )
 			assert (rp == strlen(textplay));
 
    			//receiving instructions
+   			//memset(token,0,256);
+   			memset(buf,0,256);	
 			rs = zmq_recv (subscriber, buf, 256, 0);
+			printf("\n\nbefore parse: %s\n\n", buf);
+
+			test1 = strdup(buf);
+
 			for (int i = 0; i < 4; ++i)
     		{
-    			token = strtok_r(server, ">", &server);
+    			test2 = strsep(&test1, ">");
     		}
 
-   			printf("action received: %s\n",token);
+   			printf("action received: %s\n",test2);
    			
-		}while(action[0] == 'h' && buf[0] != '!');
+		}while((action[0] == 'h') && (test2[0] != '!'));
 
+		//memset(token,0,256);
    		memset(buf,0,256);		
 		//waiting for winner anouncement
 		printf("Waiting for winner anouncement...\n");
