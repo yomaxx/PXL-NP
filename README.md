@@ -2,7 +2,7 @@
 
 blackjack server geschreven in python met client in c.
 
-## alegemene uitleg
+## algemene uitleg
 
  De server verwacht dat 2 spelers connecten voordat de game begint. Als de game begonnen is deelt hij 2 kaarten aan beide spelers uit.
  De kaarten worden naar beide spelers gestuurd, ze krijgen dus hun eigen kaarten en die van de andere speler te zien.
