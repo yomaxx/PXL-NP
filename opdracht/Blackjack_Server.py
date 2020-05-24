@@ -57,6 +57,12 @@ while(1):
         Player2_cards.append(random.randint(1,11))
         if len(Player2_cards) == 2:
             print("Player 2 has: ", Player2_cards)
+            
+    #Check if player didnt get 11,11
+    if(Player1_cards[0] == 11) and (Player1_cards[1] == 11):
+        Player1_cards[1] = 1;
+    if(Player2_cards[0] == 11) and (Player2_cards[1] == 11):
+        Player2_cards[1] = 1
         
     #send cards to both players
     time.sleep(1)
@@ -78,10 +84,10 @@ while(1):
         Player1_action = message.decode('utf8').split('>')[3]
         
         print(Player1_action)
-        if Player1_action == "hit":
+        if (Player1_action == "hit") or (Player1_action == "Hit"):
             Player1_cards.append(random.randint(1,11))
             print("You now have "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
-        elif Player1_action == "stay":
+        elif (Player1_action == "stay") or (Player1_action == "Stay"):
             print("You ended your turn with: "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
             message = GameTopic + PlayerNames[0] + '>' + "You ended with: "+str(Player1_cards)+ '>'
             break
@@ -94,10 +100,10 @@ while(1):
     while sum(Player2_cards) <= 21:
         if sum(Player2_cards) == 21:
             print("!!!Player2 has blackjack!!!")
-            message = GameTopic + PlayerNames[0] + '>' + "!!!BLACKJACK!!!"+ '>'
+            message = GameTopic + PlayerNames[1] + '>' + "!!!BLACKJACK!!!"+ '>'
             break
         time.sleep(1)   
-        message = GameTopic + PlayerNames[1] + '>' + "You now have "+ str(Player2_cards)+" stay or hit?" + '>'
+        message = GameTopic + PlayerNames[1] + '>' + "You now have "+ str(Player2_cards)+ " "+ PlayerNames[0]+ " Has: "+ str(Player1_cards)+" stay or hit?" + '>'
         publisher.send_string(message)
         message = subscriber.recv()
         Player2_action = message.decode('utf8').split('>')[3]
@@ -105,7 +111,7 @@ while(1):
         if Player2_action == "hit":
             Player2_cards.append(random.randint(1,11))
             print("You now have "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
-        elif Player1_action == "stay":
+        elif Player2_action == "stay":
             print("You ended your turn with: "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
             message = GameTopic + PlayerNames[1] + '>' + "You ended with: "+str(Player2_cards)+ '>'
             break
