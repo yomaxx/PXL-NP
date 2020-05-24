@@ -25,12 +25,15 @@ om een duidelijker beelt te geven hoe het spel werkt met commando's staat hieron
 
 ## verloop game
 ```
-- SERVER : luistert op blackjack>join?>
-- CLIENT : verstuurd naam op blackjack>join?>naam>
-- SERVER : verstuurd op blackjack>join!> dat alle spelers verbonden zijn
-- SERVER : verstuurd op blackjack>game!> de kaarten van alle spelers (alle spelers krijgen dit binnen)
-- LOOP   : volgende 2 lopen zolang speler niet blackjack heeft of busted is of speler geen kaart meer wilt.
-- SERVER : verstuurd op blackjack>game!>naam1> wat speler1 wilt doen
-- CLIENT1: verstuurd op blackjack>game?>naam1> wat hij wilt doen
-
+- SERVER   : luistert op blackjack>join?>
+- CLIENT   : verstuurd naam op blackjack>join?>naam>
+- SERVER   : verstuurd op blackjack>join!> dat alle spelers verbonden zijn
+- SERVER   : verstuurd op blackjack>game!> de kaarten van alle spelers (alle spelers krijgen dit binnen)
+- loop     : volgende 2 lopen zolang speler niet blackjack heeft of busted is of speler geen kaart meer wilt.
+- SERVER   : verstuurd op blackjack>game!>naam1> wat speler1 wilt doen
+- CLIENT1  : verstuurd op blackjack>game?>naam1> wat hij wilt doen
+- end loop :
+- SERVER   : stuurt op blackjack>winner!> de winnaar -> gaat terug naar begin
+- CLIENT   : vraagt of user opnieuw wil spelen
+- CLIENT   : if yes, verstuurt opnieuw join bericht met naam naar server
 ```
