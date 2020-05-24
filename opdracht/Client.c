@@ -5,6 +5,17 @@
 #include <unistd.h>
 #include <assert.h>
 
+char *parse(int keer, char *ParseString)
+{
+	char *String,*ParsedString;
+	String = strdup(ParseString);
+	for (int i = 0; i < keer; i++)
+	{
+		ParsedString = strsep(&String, ">");
+	}
+	return ParsedString;
+}
+
 int main( int argc, char * argv[] )
 {
 	void *context = zmq_ctx_new();
@@ -36,14 +47,13 @@ int main( int argc, char * argv[] )
 
     //making chars
 	char buf [256];
-	char *test1, *test2;
+	char *ParsedString;
 	char name[50];
 	char textJoin[60];
 	char textplay[60];
 	char filterPlayer[50];
 	char action[30];
 	char play;
-	
 	//asking player for name
 	printf("Enter your name: ");
 	scanf(" %s", name);
@@ -62,7 +72,7 @@ int main( int argc, char * argv[] )
 	zmq_msg_t message;
 	rs = zmq_msg_init (&message);
 
-	do{
+	do{		//Game loop
 		//sending join with name to server
 		rp = zmq_send(publisher, textJoin, strlen(textJoin), 0);
 		assert (rp == strlen(textJoin));
@@ -71,25 +81,30 @@ int main( int argc, char * argv[] )
 		printf("Wating for players\n");
 		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterJoin, strlen (filterJoin));
 		rs = zmq_recv (subscriber, buf, 256, 0);
-    	printf("Message received: %s\n\n",buf);
+		ParsedString = parse(3, buf);
+    	printf("Message received: %s\n\n",ParsedString);
     	memset(buf,0,256);
 
 		//receive first message with cards
 		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterGame, strlen (filterGame));
 		rs = zmq_recv (subscriber, buf, 256, 0);
-    	printf("Message received: %s\n\n",buf);
+		ParsedString = parse(3, buf);
+    	printf("Message received: %s\n\n",ParsedString);
     	memset(buf,0,256);
     	rs = zmq_setsockopt (subscriber, ZMQ_UNSUBSCRIBE, filterGame, strlen (filterGame));
 
 		rs = zmq_setsockopt(subscriber, ZMQ_SUBSCRIBE, filterPlayer, strlen (filterPlayer));
 		rs = zmq_recv (subscriber, buf, 256, 0);
-   		printf("action received: %s\n",buf);
+		ParsedString = parse(4, buf);
+   		printf("action received: %s\n",ParsedString);
 
-    	do 	//receiving player instructions
+    	do 	//player turn loop
     	{
 			//entering action and sending
+			do{
    			printf("enter your action: ");
 			scanf(" %s", action);
+			}while(action[0] != 'h' && action[0] != 's');
 
 			//parsing text to send
 			strcpy(textplay, berichtGame);
@@ -102,26 +117,19 @@ int main( int argc, char * argv[] )
    			//memset(token,0,256);
    			memset(buf,0,256);	
 			rs = zmq_recv (subscriber, buf, 256, 0);
-			printf("\n\nbefore parse: %s\n\n", buf);
 
-			test1 = strdup(buf);
-
-			for (int i = 0; i < 4; ++i)
-    		{
-    			test2 = strsep(&test1, ">");
-    		}
-
-   			printf("action received: %s\n",test2);
+			ParsedString = parse(4, buf);
+   			printf("action received: %s\n",ParsedString);
    			
-		}while((action[0] == 'h') && (test2[0] != '!'));
+		}while((action[0] == 'h') && (ParsedString[0] != '!'));
 
-		//memset(token,0,256);
    		memset(buf,0,256);		
 		//waiting for winner anouncement
 		printf("Waiting for winner anouncement...\n");
 		rs = zmq_setsockopt (subscriber, ZMQ_SUBSCRIBE, filterWinner, strlen (filterWinner));
 		rs = zmq_recv (subscriber, buf, 256, 0);
-    	printf("Message received: %s\n\n",buf);
+		ParsedString = parse(3, buf);
+    	printf("Message received: %s\n\n",ParsedString);
     	memset(buf,0,256);
 
     	//play again
