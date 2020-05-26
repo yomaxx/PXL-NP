@@ -6,6 +6,8 @@ import time
 import random
 import zmq
 
+from random import choice as rc
+
 #setup filter and topic
 JoinFilter = "BlackJack>join?>".encode('ascii')
 JoinTopic = "BlackJack>join!>"
@@ -22,6 +24,9 @@ subscriber = context.socket(zmq.SUB)
 publisher.connect("tcp://benternet.pxl-ea-ict.be:24041")
 subscriber.connect("tcp://benternet.pxl-ea-ict.be:24042")
 subscriber.setsockopt(zmq.SUBSCRIBE, JoinFilter)
+
+#store possible cards values
+cards = [2,3,4,5,6,7,8,9,10,10,10,11]
 
 while(1):
     
@@ -50,11 +55,11 @@ while(1):
 
     #server deals cards
     while len(Player1_cards) != 2:
-        Player1_cards.append(random.randint(1,11))
+        Player1_cards.append(rc(cards))
         if len(Player1_cards) == 2:
             print("Player 1 has: ", Player1_cards)
     while len(Player2_cards) != 2:
-        Player2_cards.append(random.randint(1,11))
+        Player2_cards.append(rc(cards))
         if len(Player2_cards) == 2:
             print("Player 2 has: ", Player2_cards)
             
@@ -85,7 +90,7 @@ while(1):
         
         print(Player1_action)
         if (Player1_action == "hit") or (Player1_action == "Hit"):
-            Player1_cards.append(random.randint(1,11))
+            Player1_cards.append(rc(cards))
             print("You now have "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
         elif (Player1_action == "stay") or (Player1_action == "Stay"):
             print("You ended your turn with: "+ str(sum(Player1_cards)) +" from these cards ", Player1_cards)
@@ -109,7 +114,7 @@ while(1):
         Player2_action = message.decode('utf8').split('>')[3]
         
         if Player2_action == "hit":
-            Player2_cards.append(random.randint(1,11))
+            Player2_cards.append(rc(cards))
             print("You now have "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
         elif Player2_action == "stay":
             print("You ended your turn with: "+ str(sum(Player2_cards)) +" from these cards ", Player2_cards)
