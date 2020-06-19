@@ -50,9 +50,7 @@ while(1):
     
     #make and set win amount filter
     Wins1Filter = "BlackJack>join?>aantalWins>".encode('ascii')
-    #Wins2Filter = "BlackJack>join?>aantalWins>".encode('ascii')
     subscriber.setsockopt(zmq.SUBSCRIBE, Wins1Filter)
-    #subscriber.setsockopt(zmq.SUBSCRIBE, Wins2Filter)
     subscriber.setsockopt(zmq.UNSUBSCRIBE, JoinFilter)
     
     #Ask players for amount of wins
@@ -71,8 +69,6 @@ while(1):
     publisher.send_string(message)
     
     #unsubscribe to amountwins filter
-    subscriber.setsockopt(zmq.UNSUBSCRIBE, Wins1Filter)
-    #subscriber.setsockopt(zmq.UNSUBSCRIBE, Wins2Filter)
    
     #set filter to game filter
     subscriber.setsockopt(zmq.SUBSCRIBE, GameFilter)
