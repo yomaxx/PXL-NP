@@ -55,7 +55,6 @@ int main( int argc, char * argv[] )
 	char textJoin[60];
 	char textplay[60];
 	char filterPlayer[50];
-	//har filterPlayerWins[50];
 	char action[30];
 	char play;
 
@@ -72,13 +71,6 @@ int main( int argc, char * argv[] )
 	strcpy(filterPlayer, "BlackJack>game!>");
 	strcat(filterPlayer, name);
 	strcat(filterPlayer, ">");
-
-	/*
-	//setup wins topic
-	strcpy(filterPlayerWins, "BlackJack>join?>");
-	strcat(filterPlayerWins, name);
-	strcat(filterPlayerWins, ">aantalWins");
-	*/
 
 	//setup receive message
 	zmq_msg_t message;
